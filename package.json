@@ -1,0 +1,10 @@
+{
+  "name": "be-capstone",
+  "version": "1.0.0",
+  "description": "Alan",
+  "dependencies": {
+    "azure-function-express": "^2.0.0",
+    "express": "^4.21.2",
+    "mssql": "^11.0.1"
+  }
+}
