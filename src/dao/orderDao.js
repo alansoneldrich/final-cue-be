@@ -2,21 +2,20 @@ const { executeQuery } = require("../config/database");
 const sql = require("mssql");
 
 module.exports = {
-    async insertOrder(customerId, userId, items) {
+    async getAvailablePONumber() {
+        const poQuery = `SELECT TOP 1 PO_NUMBER FROM dbo.[ORDER] ORDER BY ORDER_ID DESC`;
+        return await executeQuery(poQuery);
+    },
+
+    async insertOrder(customerId, userId, items, newPoNumber) {
+
+        // Validate parameters
         if (!customerId || !userId || !items || items.length === 0) {
             throw new Error("Missing required fields: customerId, userId, items.");
         }
 
-        const poQuery = `SELECT TOP 1 PO_NUMBER FROM dbo.[ORDER] ORDER BY ORDER_ID DESC`;
-        const lastPoResult = await executeQuery(poQuery);
-
-        let newPoNumber = "PO-000000001"; // Default if no orders exist
-        if (lastPoResult.length > 0) {
-            const lastPo = lastPoResult[0].PO_NUMBER;
-            const lastPoNum = parseInt(lastPo.replace("PO-", ""), 10) + 1;
-            newPoNumber = `PO-${lastPoNum.toString().padStart(9, "0")}`;
-        }
-
+        
+        // Insert new data into ORDER table
         const orderQuery = `
             INSERT INTO dbo.[ORDER] (CUSTOMER_ID, USER_ID, DATE_CREATED, PO_NUMBER, ORDER_STATUS)
             VALUES (@customerId, @userId, GETDATE(), @poNumber, 'Pending');
@@ -29,6 +28,7 @@ module.exports = {
             { name: "poNumber", type: sql.VarChar, value: newPoNumber }
         ]);
 
+        // Check if response is empty or failed
         if (!orderResult || orderResult.length === 0) {
             throw new Error("Failed to insert order.");
         }
@@ -131,7 +131,6 @@ module.exports = {
             }))
         };
 
-        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", order)
 
         return order;
     },

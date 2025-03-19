@@ -24,7 +24,6 @@ async function executeQuery(query, params = []) {
   try {
     const pool = await connectionPool;
     const request = pool.request();
-    console.log("params", params)
     if (!Array.isArray(params)) {
       throw new Error("Invalid params: Expected an array");
     }

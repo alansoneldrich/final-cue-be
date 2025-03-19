@@ -9,7 +9,6 @@ app.post("/api/orders/create", async (req, res) => {
         const order = await orderService.createOrder(customerId, userId, items);
         res.status(201).json(order);
     } catch (error) {
-        console.log(error); 
         res.status(400).json({ error: error.message });
     }
 });
