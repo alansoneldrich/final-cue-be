@@ -94,5 +94,64 @@ module.exports = {
         query += " GROUP BY O.ORDER_ID, O.ORDER_STATUS, O.CUSTOMER_ID, O.DATE_CREATED";
 
         return await executeQuery(query, params);
+    },
+
+    async getOrderById(orderId) {
+        const query = `
+            SELECT 
+                O.ORDER_ID AS orderId,
+                O.CUSTOMER_ID AS customerId,
+                O.PO_NUMBER AS poNumber,
+                O.ORDER_STATUS AS status,
+                O.DATE_CREATED AS createdDate,
+                OD.PRODUCT_ID AS productId,
+                OD.QUANTITY AS quantity,
+                OD.PRICE AS price
+            FROM dbo.[ORDER] O
+            LEFT JOIN dbo.[ORDER_DETAILS] OD ON O.ORDER_ID = OD.ORDER_ID
+            WHERE O.ORDER_ID = @orderId
+        `;
+
+        const result = await executeQuery(query, [{ name: "orderId", type: sql.Int, value: orderId }]);
+
+        if (result.length === 0) {
+            return null;
+        }
+
+        const order = {
+            orderId: result[0].orderId,
+            customerId: result[0].customerId,
+            poNumber: result[0].poNumber,
+            status: result[0].status,
+            createdDate: result[0].createdDate,
+            items: result.map(row => ({
+                productId: row.productId,
+                quantity: row.quantity,
+                price: row.price
+            }))
+        };
+
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", order)
+
+        return order;
+    },
+
+    async getOrderDetails(orderId) {
+        const result = await executeQuery(
+            "SELECT od.PRODUCT_ID, od.QUANTITY, od.PRICE FROM dbo.ORDER_DETAILS od WHERE od.ORDER_ID = @orderId",
+            [{ name: "orderId", type: sql.Int, value: orderId }]
+        );
+        return result.recordset;
+    },
+    
+    async updateOrderStatus(orderId, status) {
+        await executeQuery(
+            "UPDATE dbo.[ORDER] SET ORDER_STATUS = @status WHERE ORDER_ID = @orderId",
+            [
+                { name: "orderId", type: sql.Int, value: orderId },
+                { name: "status", type: sql.VarChar, value: status }
+            ]
+        );
     }
+    
 };

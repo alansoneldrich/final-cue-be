@@ -21,6 +21,19 @@ class OrderService {
     static async getOrders(filters) {
         return await orderDAO.getOrders(filters);
     }
+
+    static async getOrderById(orderId) {
+        if (!orderId) {
+            throw new Error("Order ID is required.");
+        }
+
+        const order = await orderDAO.getOrderById(orderId);
+        if (!order) {
+            throw new Error(`Order ${orderId} not found.`);
+        }
+
+        return order;
+    }
 }
 
 module.exports = OrderService;
